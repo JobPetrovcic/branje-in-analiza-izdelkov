@@ -66,8 +66,7 @@ def shrani_povezave_kataloga(nalozi_strani_iz_interneta=False):
 
     vse_povezave = obdelaj_vse_strani_kataloga()
 
-    with open(DATOTEKA_VSEH_POVEZAV_KATALOGA,'w') as datoteka:
+    with open(DATOTEKA_VSEH_POVEZAV_KATALOGA, 'w') as datoteka:
         zapis = csv.writer(datoteka, delimiter='\n')
         zapis.writerow(vse_povezave)
-
-shrani_povezave_kataloga(True)
+        
