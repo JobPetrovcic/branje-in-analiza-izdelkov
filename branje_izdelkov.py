@@ -77,7 +77,6 @@ def preberi_urlje():
                 urlji += url
     return urlji
 
-MAPA_IZDELKOV = "izdelki"
 def dobi_ime_datoteke(stevilka_izdelka):
     return f'{MAPA_IZDELKOV}/{stevilka_izdelka}.html'
 
@@ -90,6 +89,7 @@ def najdi_stevilko_izdelka(url):
 
 from wakepy import set_keepawake, unset_keepawake
 def shrani_strani_izdelkov(zamik=5):
+    # zagotovimo, da ne bo računalnik se izklopil
     set_keepawake(keep_screen_awake=False)
 
     urlji = preberi_urlje()
@@ -106,30 +106,63 @@ def shrani_strani_izdelkov(zamik=5):
     unset_keepawake()
 
 
-def nalozi_strani_izdelkov():
-    vse_strani = []
-    for stevilka_izdelka in listdir(MAPA_IZDELKOV):
-        vse_strani += [nalozi_stran_iz_datoteke(dobi_ime_datoteke(stevilka_izdelka.strip(".html")))]
-    return vse_strani
+glava_csv=['ime',
+'sestavine',
+'kolicina',
+'kcal',
+'Maščobe',
+'od tega nasičene maščobe',
+'Ogljikovi hidrati',
+'od tega sladkorji',
+'Prehranske vlaknine',
+'Beljakovine',
+'Sol']
+def dobi_vrstico_csv(slovar):
+    # ali je mogoča uporaba dictwriterja?
 
-"""glava_csv=['ime', 'sestavine', 'kolicina', ]
-def shrani_informacije_cvs(seznam):
-    with open('eggs.csv', newline='') as csvfile:
-        spamreader = csv.reader(csvfile, delimiter=' ', quotechar='|')
-        for row in spamreader:
-            print(', '.join(row))"""
+    vrstica=[]
+
+    for indeks_stolpca in range(0, 3):
+        if glava_csv[indeks_stolpca] in slovar:
+            vrstica += [slovar[glava_csv[indeks_stolpca]]]
+        else:
+            vrstica += ['']
+    
+    for indeks_stolpca in range(3, len(glava_csv)):
+        if glava_csv[indeks_stolpca] in slovar['hranilne_vrednosti']:
+            vrstica += [slovar['hranilne_vrednosti'][glava_csv[indeks_stolpca]]]
+        else:
+            vrstica +=['0,0 g']
+
+    return vrstica
+    
+
+
+# Zaradi kolicine podatkov in pomanjkanja RAMa je ta funkcija ni razbita na več funkcij, saj je potrebno vse narediti v enem koraku .
+
+MAPA_IZDELKOV = "izdelki"
+DATOTEKA_INFORMACIJ_IZDELKOV = 'informacije.csv'
 
 def obdelaj_strani_izdelkov():
-    vse_strani = nalozi_strani_izdelkov()
+    with open(DATOTEKA_INFORMACIJ_IZDELKOV, 'w', newline='', encoding='utf-8') as datoteka:
+        zapis = csv.writer(datoteka, delimiter='|')
 
-    seznam = []
-    for stran in vse_strani:
-        informacije = poberi_vse_informacije(stran)
-        if informacije is not None:
-            seznam += [informacije]
-    
-    return seznam
-    #shrani_informacije_cvs(seznam)
+        zapis.writerow(glava_csv)
+
+        for stevilka_izdelka in listdir(MAPA_IZDELKOV):
+            try:
+                stran = nalozi_stran_iz_datoteke(dobi_ime_datoteke(stevilka_izdelka.strip(".html")))
+
+                informacije = poberi_vse_informacije(stran)
+            except:
+                pass
+
+            if informacije is not None:
+                    vrstica = dobi_vrstico_csv(informacije)
+                    zapis.writerow(vrstica)
+
+            
 
 if __name__ == '__main__':
-    shrani_strani_izdelkov(0.5)
+    #shrani_strani_izdelkov(0.5)
+    obdelaj_strani_izdelkov()
