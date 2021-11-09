@@ -7,10 +7,13 @@ except Exception as e:
 def stran_v_niz(url):
     try:
         seansa = HTMLSession()
+            
         odgovor = seansa.get(url)
         odgovor.html.render()
 
         vsebina = odgovor.html.html
+
+        seansa.close()
     except Exception as e:
         print(f"Pri doseganju spletne strani je prišlo do naslednje napake:{e}")
     else:

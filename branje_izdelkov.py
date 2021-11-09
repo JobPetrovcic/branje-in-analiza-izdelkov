@@ -1,7 +1,7 @@
 from branje_kataloga import DATOTEKA_VSEH_POVEZAV_KATALOGA
 from branje_strani import shrani_stran, nalozi_stran_iz_datoteke
-import csv, re
-from os import listdir
+import csv, re, time
+from os import listdir, path
 
 # funkcije za pobiranje informacij iz strani
 def poberi_ime(div_informacij):
@@ -88,10 +88,23 @@ def najdi_stevilko_izdelka(url):
     else:
         raise ValueError(f'Url {url} ne ustreza vzorcu za url produkta.')
 
-def shrani_strani_izdelkov():
+from wakepy import set_keepawake, unset_keepawake
+def shrani_strani_izdelkov(zamik=5):
+    set_keepawake(keep_screen_awake=False)
+
     urlji = preberi_urlje()
     for url in urlji:
-        shrani_stran(url, dobi_ime_datoteke(najdi_stevilko_izdelka(url)))
+        pot = dobi_ime_datoteke(najdi_stevilko_izdelka(url))
+        if not path.exists(pot):
+            try:
+                print(f'Shranjujem {url} ...')
+                shrani_stran(url, pot)
+                time.sleep(zamik)
+            except:
+                print(f'Ni mi uspelo shraniti {url}.')
+
+    unset_keepawake()
+
 
 def nalozi_strani_izdelkov():
     vse_strani = []
@@ -99,9 +112,12 @@ def nalozi_strani_izdelkov():
         vse_strani += [nalozi_stran_iz_datoteke(dobi_ime_datoteke(stevilka_izdelka.strip(".html")))]
     return vse_strani
 
-#glava_csv=['ime', 'sestavine', 'kolicina', ]
-#def shrani_informacije_cvs(seznam):
-
+"""glava_csv=['ime', 'sestavine', 'kolicina', ]
+def shrani_informacije_cvs(seznam):
+    with open('eggs.csv', newline='') as csvfile:
+        spamreader = csv.reader(csvfile, delimiter=' ', quotechar='|')
+        for row in spamreader:
+            print(', '.join(row))"""
 
 def obdelaj_strani_izdelkov():
     vse_strani = nalozi_strani_izdelkov()
@@ -116,10 +132,4 @@ def obdelaj_strani_izdelkov():
     #shrani_informacije_cvs(seznam)
 
 if __name__ == '__main__':
-    pass
-    #print(nalozi_strani_izdelkov())
-    #shrani_strani_izdelkov()
-    print(obdelaj_strani_izdelkov())
-
-    #print(dobi_ime_datoteke(503880))
-    #nalozi_stran_iz_datoteke(dobi_ime_datoteke)
+    shrani_strani_izdelkov(0.5)
