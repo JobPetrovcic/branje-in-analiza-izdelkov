@@ -161,8 +161,18 @@ def obdelaj_strani_izdelkov():
                     vrstica = dobi_vrstico_csv(informacije)
                     zapis.writerow(vrstica)
 
-            
+def nalozi_vse_informacije():
+    print("Odpiram informacije o izdelkih...")
+    with open(DATOTEKA_INFORMACIJ_IZDELKOV, 'r', newline='', encoding='utf-8') as datoteka:
+        zapis = csvreader = csv.reader(datoteka, delimiter='|')
+        glava = next(csvreader)
+        #print(glava)
+        vrstice = []
+        for vrstica in csvreader:
+            vrstice.append(vrstica)
+        return vrstice
 
 if __name__ == '__main__':
     #shrani_strani_izdelkov(0.5)
-    obdelaj_strani_izdelkov()
+    #obdelaj_strani_izdelkov()
+    pass
