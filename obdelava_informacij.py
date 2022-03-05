@@ -23,9 +23,7 @@ def poisci_kandidate(kljucne_besede):
         if stevilo_zadetkov > 0:
             pari.append([stevilo_zadetkov, info])
 
-    for par in pari :
-        print(par)
-    pari.sort(reverse=True, key = lambda par : par[0])
+    pari.sort(key = lambda par : (-par[0], len(par[1][0])))
 
     kandidati = list(map(lambda par : par[1], pari))
     return kandidati
@@ -110,7 +108,7 @@ def dobi_vnos(moznosti):
             print("Vnos neveljaven. Poskusite ponovno")
 
 def odstrani_procent(niz):
-    return re.sub("\(?\d+\,?\d+%\)?", "", niz)
+    return re.sub("\(?(\s)*\d+\,?\d+(\s)*%\)?", "", niz)
 
 def razcepi_sestavine(sestavine):
     razcep = razcepi_niz(sestavine)
@@ -133,6 +131,7 @@ def razcepi_sestavine(sestavine):
                     koncne_sestavine += razcepljene_podsestavine
                 else:
                     # če ni nič od tega vprašamo uporabnika
+                    print("\n" * 50)
                     print(f"Pri obravnavi '{sestavine}' ne morem razbrati kaj je v oklepajih. Izberi:")
                     print("0: Ignoriraj besedilo v oklepaju.")
                     print("1: Uporabi besedilo v oklepaju.")
@@ -154,7 +153,7 @@ def razcepi_sestavine(sestavine):
         return koncne_sestavine
 
 def precisti(niz):
-    return re.sub("[ ]{2,}", " ", niz).strip().upper()
+    return re.sub("\s", " ", niz).strip().upper()
 
 def dobi_sestavine(sestavine):
     sestavine = odstrani_procent(sestavine).upper()
@@ -166,6 +165,49 @@ def dobi_sestavine(sestavine):
         sestavine_s_ponovitvami += [precisti(s)]
 
     # odstrani ponovitve
-    koncne_sestavine = list(set(sestavine_s_ponovitvami))
+    print(sestavine_s_ponovitvami)
+
+    #uredimo zato ker list(set()) naključno premeče seznam
+    koncne_sestavine = sorted(list(set(sestavine_s_ponovitvami)))
     
     return koncne_sestavine
+
+NAJBOLJ_POMEMBNI_ZADETKI = 7
+
+def obravnavaj_sestavine(sestavine):
+    mozne_sestavine = dobi_sestavine(sestavine)
+    print(mozne_sestavine)
+
+    koncne_sestavine = []
+    for mozna_sestavina in mozne_sestavine:
+        mozni_zadetki = poisci_kandidate(mozna_sestavina.split())
+        
+        if len(mozni_zadetki) == 0:
+            continue
+        
+        for zacetek in range(0, len(mozni_zadetki), NAJBOLJ_POMEMBNI_ZADETKI):
+            print("\n" * 50)
+            print(f"Za '{mozna_sestavina}' sem našel naslednje možne zadetke:")
+            print("0: Spusti to sestavino.")
+
+            stevilo_trenutnih_zadetkov = min(NAJBOLJ_POMEMBNI_ZADETKI, len(mozni_zadetki) - zacetek)
+            trenutni_zadetki = mozni_zadetki[zacetek : zacetek + stevilo_trenutnih_zadetkov]
+            for i in range(stevilo_trenutnih_zadetkov):
+                print(f"{i+1}: {trenutni_zadetki[i][0]}")
+            print(f"{stevilo_trenutnih_zadetkov + 1}: Izdelek ni med prikazanimi, pokaži naslednje.")
+
+            vnos = dobi_vnos([f"{i}" for i in range(2+stevilo_trenutnih_zadetkov) ])
+
+            if vnos == "0":
+                break
+            elif vnos == f"{stevilo_trenutnih_zadetkov + 1}":
+                continue
+            else:
+                koncne_sestavine += [mozni_zadetki[int(vnos)-1]]
+                break
+    return koncne_sestavine
+
+
+s ="sončnično olje, kisle kumarice 6,00 %, kis, voda, sladkor, koruzni škrob, GORČICA (VODA, KIS, GORČIČNA SEMENA, SOL, SLADKOR, ZAČIMBE, AROMA), začimbe, izvleček začimbe (paprika, kurkuma) sol, modificirani škrob, AROME (VSEBUJEJO ZELENO IN GORČICO)."
+print(obravnavaj_sestavine(s))
+#obravnavaj_sestavine(s)
